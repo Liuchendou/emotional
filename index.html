@@ -324,6 +324,36 @@ textarea { resize: vertical; min-height: 66px; }
       <div class="setting-item"><span>清除全部数据（不可恢复）</span><button class="danger" onclick="clearAllData()">清除</button></div>
     </div>
     <div class="card">
+      <div class="card-title">云端备份（GitHub Gist）</div>
+      <div class="tip-box">
+        💡 私人、免费、自动同步。数据会备份到一个<strong>私密 Gist</strong>（只有你能看，链接不公开）。<br>
+        需要一个 GitHub 个人访问令牌（token），生成时勾选 <code>gist</code> 权限即可。<br>
+        ⚠️ token 会明文存在本机浏览器，仅用于本地调用；建议用专属小号 token，用完可随时撤销。
+      </div>
+      <div class="field">
+        <label class="field-label">GitHub Token（需 gist 权限）</label>
+        <input type="password" id="gistToken" placeholder="ghp_...">
+      </div>
+      <div class="setting-item">
+        <span>自动同步（保存记录后自动备份）</span>
+        <input type="checkbox" id="gistAuto" checked style="accent-color:var(--primary);">
+      </div>
+      <div class="setting-item">
+        <span>备份状态</span>
+        <span id="gistStatus" style="font-size:13px;color:var(--text-light);">未配置</span>
+      </div>
+      <div class="setting-item">
+        <span>已绑定 Gist</span>
+        <span id="gistIdText" style="font-size:12px;color:var(--text-light);">—</span>
+      </div>
+      <div class="btn-group" style="margin-top:12px;">
+        <button id="btnGistSaveToken">保存令牌</button>
+        <button id="btnGistBackup">立即备份</button>
+        <button id="btnGistRestore">从云端恢复</button>
+        <button id="btnGistDisconnect" class="danger">断开</button>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-title">关于</div>
       <p style="font-size:13px; color:var(--text-light); line-height:1.8;">
         🐾 工作情绪工作台 · 离线版<br>
@@ -368,7 +398,7 @@ function loadData() {
   try { const raw = localStorage.getItem(STORAGE_KEY); const d = raw ? JSON.parse(raw) : {entries:[]}; if(!d.entries) d.entries=[]; return d; }
   catch(e) { return {entries:[]}; }
 }
-function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); scheduleGistBackup(); }
 function findEntry(id) { return loadData().entries.find(e => e.id === id); }
 
 // ==================== 词典数据 ====================
@@ -856,8 +886,94 @@ function clearAllData() {
   if (confirm('确定清除全部数据？不可恢复。')) { localStorage.removeItem(STORAGE_KEY); showToast('已清除'); renderReview(); }
 }
 
+// ==================== 云端备份（GitHub Gist）====================
+const GIST_TOKEN_KEY = 'wb_gist_token', GIST_ID_KEY = 'wb_gist_id', GIST_AUTO_KEY = 'wb_gist_auto', GIST_FILE = 'workbuddy-backup.json';
+let _gistTimer = null;
+function getGistToken(){ return localStorage.getItem(GIST_TOKEN_KEY) || ''; }
+function getGistId(){ return localStorage.getItem(GIST_ID_KEY) || ''; }
+function setGistId(id){ localStorage.setItem(GIST_ID_KEY, id); }
+function updateGistStatus(t){ const el = document.getElementById('gistStatus'); if(el) el.textContent = t; }
+function updateGistIdText(){ const el = document.getElementById('gistIdText'); if(el) el.textContent = getGistId() || '—'; }
+function gistPayload(){
+  const data = loadData();
+  data._meta = { savedAt: new Date().toISOString(), app: 'workEmotionJournal', v: 2 };
+  return { description: '工作情绪工作台 自动备份', public: false, files: { [GIST_FILE]: { content: JSON.stringify(data) } } };
+}
+async function gistBackup(manual){
+  const token = getGistToken();
+  if(!token){ if(manual) showToast('请先填写并保存 Token'); return; }
+  const id = getGistId();
+  const headers = { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' };
+  try {
+    let url = 'https://api.github.com/gists', method = 'POST';
+    if(id){ url = 'https://api.github.com/gists/' + id; method = 'PATCH'; }
+    const res = await fetch(url, { method, headers, body: JSON.stringify(gistPayload()) });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if(json.id) setGistId(json.id);
+    updateGistIdText();
+    updateGistStatus('✅ 已备份 ' + new Date().toLocaleString());
+    if(manual) showToast('已备份到云端');
+  } catch(e){
+    updateGistStatus('⚠️ 备份失败（离线 / token 无效 / 限流）');
+    if(manual) showToast('备份失败，检查网络或 token');
+  }
+}
+function scheduleGistBackup(){
+  if(localStorage.getItem(GIST_AUTO_KEY) === 'off') return;
+  if(!getGistToken()) return;
+  clearTimeout(_gistTimer);
+  _gistTimer = setTimeout(() => gistBackup(false), 1500);
+}
+async function gistRestore(){
+  const token = getGistToken(), id = getGistId();
+  if(!token || !id){ showToast('请先配置并至少备份一次'); return; }
+  try {
+    const res = await fetch('https://api.github.com/gists/' + id, { headers: { 'Authorization': 'token ' + token } });
+    if(!res.ok) throw new Error();
+    const json = await res.json();
+    const f = json.files && json.files[GIST_FILE];
+    if(!f) throw new Error('no file');
+    const imported = JSON.parse(f.content);
+    const data = loadData();
+    const map = {};
+    data.entries.forEach(e => map[e.id] = e);
+    (imported.entries || []).forEach(e => map[e.id] = e);
+    data.entries = Object.values(map);
+    delete data._meta;
+    saveData(data);
+    renderReview();
+    showToast('已从云端恢复，共 ' + data.entries.length + ' 条');
+  } catch(e){ showToast('恢复失败，检查 token / 网络'); }
+}
+function initGistUI(){
+  const tokenInput = document.getElementById('gistToken');
+  const autoChk = document.getElementById('gistAuto');
+  if(tokenInput) tokenInput.value = getGistToken();
+  if(autoChk) autoChk.checked = (localStorage.getItem(GIST_AUTO_KEY) !== 'off');
+  updateGistIdText();
+  updateGistStatus(getGistToken() ? '已配置，保存记录将自动备份' : '未配置');
+  document.getElementById('btnGistSaveToken')?.addEventListener('click', () => {
+    const v = (tokenInput.value || '').trim();
+    if(!v){ localStorage.removeItem(GIST_TOKEN_KEY); showToast('已清除 token'); updateGistStatus('未配置'); }
+    else { localStorage.setItem(GIST_TOKEN_KEY, v); showToast('已保存 token'); updateGistStatus('已配置，保存记录将自动备份'); gistBackup(true); }
+    updateGistIdText();
+  });
+  document.getElementById('btnGistBackup')?.addEventListener('click', () => gistBackup(true));
+  document.getElementById('btnGistRestore')?.addEventListener('click', () => gistRestore());
+  document.getElementById('btnGistDisconnect')?.addEventListener('click', () => {
+    if(confirm('断开云端备份？会删除本地的 token 和 Gist 绑定（云端 Gist 文件不会自动删除，需手动去 GitHub 删）。')){
+      localStorage.removeItem(GIST_TOKEN_KEY); localStorage.removeItem(GIST_ID_KEY);
+      tokenInput.value = ''; updateGistIdText(); updateGistStatus('已断开'); showToast('已断开云端备份');
+    }
+  });
+  autoChk?.addEventListener('change', () => { localStorage.setItem(GIST_AUTO_KEY, autoChk.checked ? 'on' : 'off'); });
+  if(getGistToken()) gistBackup(false);
+}
+
 // ==================== 初始化 ====================
 renderDictionary();
+initGistUI();
 </script>
 </body>
 </html>
