@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工作情绪工作台</title>
+<!-- 版本：调试版V2 · 持续更新版 ｜ 基础版：工作情绪工作台_发布版V1.html ｜ 方法收纳：整改方向收纳.html ｜ 最小落地：Markdown 导出 -->
+<style>
+:root {
+  --bg: #f5f3ef;
+  --card: #ffffff;
+  --primary: #5b6f5e;
+  --primary-light: #7a937d;
+  --accent: #d4956a;
+  --text: #3a3a38;
+  --text-light: #8a8a86;
+  --border: #e0ddd7;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --radius: 10px;
+  --tag-bg: #edeae4;
+  --danger: #c45c5c;
+  --success: #5c9c6e;
+  --work: #5b8aa6;
+  --emo: #b07ab0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.7; font-size: 15px;
+}
+.navbar {
+  display: flex; align-items: center; background: var(--card);
+  padding: 12px 16px; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100;
+}
+.navbar .logo { font-size: 16px; font-weight: 700; color: var(--primary); margin-right: 12px; white-space: nowrap; }
+.navbar .logo span { color: var(--accent); }
+.nav-tabs { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+.nav-tab {
+  padding: 6px 12px; border: none; background: transparent; color: var(--text-light);
+  font-size: 13px; cursor: pointer; border-radius: 8px; transition: all .2s; white-space: nowrap; flex-shrink: 0;
+}
+.nav-tab:hover { background: var(--tag-bg); color: var(--text); }
+.nav-tab.active { background: var(--primary); color: #fff; font-weight: 600; }
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+.page { display: none; }
+.page.active { display: block; }
+.card {
+  background: var(--card); border-radius: var(--radius); padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow);
+}
+.card-title { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+.card-title::before { content: ""; width: 3px; height: 16px; background: var(--accent); border-radius: 2px; }
+label.field-label { display: block; font-size: 13px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
+input[type="text"], input[type="date"], input[type="time"], textarea, select {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+  font-size: 14px; font-family: inherit; background: #fdfcfa; color: var(--text); transition: border .2s;
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 2px rgba(122,147,125,.15); }
+textarea { resize: vertical; min-height: 66px; }
+.field { margin-bottom: 16px; }
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+.slider-wrap { display: flex; align-items: center; gap: 12px; }
+.slider-wrap input[type="range"] { flex: 1; -webkit-appearance: none; height: 6px; background: var(--border); border-radius: 3px; outline: none; }
+.slider-wrap input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--primary); border-radius: 50%; cursor: pointer; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.slider-value { min-width: 42px; text-align: center; font-weight: 700; font-size: 18px; color: var(--primary); }
+.mood-selector { display: flex; flex-wrap: wrap; gap: 6px; }
+.mood-tag { padding: 4px 12px; border-radius: 20px; background: var(--tag-bg); font-size: 13px; cursor: pointer; transition: all .15s; border: 1.5px solid transparent; user-select: none; }
+.mood-tag:hover { background: #e4e0d8; }
+.mood-tag.selected { background: var(--emo); color: #fff; border-color: var(--emo); }
+.btn-group { display: flex; gap: 8px; }
+.btn-group button { flex: 1; padding: 8px; border: 1.5px solid var(--border); background: #fdfcfa; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text-light); transition: all .15s; }
+.btn-group button.selected { border-color: var(--primary); background: var(--primary); color: #fff; font-weight: 600; }
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text); cursor: pointer; padding: 4px 10px; border-radius: 6px; background: var(--tag-bg); transition: all .15s; }
+.checkbox-item input { accent-color: var(--primary); }
+.checkbox-item:has(input:checked) { background: #d4e3d6; font-weight: 500; }
+.btn-save { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn-save:hover { background: #4d5f50; }
+.btn-save:active { transform: scale(.98); }
+.btn-save.work { background: var(--work); }
+.btn-save.work:hover { background: #4a748c; }
+.btn-save.emo { background: var(--emo); }
+.btn-save.emo:hover { background: #9a679a; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--text); color: #fff; padding: 10px 24px; border-radius: 24px; font-size: 14px; opacity: 0; transition: all .3s; z-index: 999; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.emotion-category { margin-bottom: 18px; }
+.emotion-category h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--card); border-radius: 8px; box-shadow: var(--shadow); }
+.emotion-category h3 .icon { font-size: 17px; }
+.emotion-category h3 .arrow { margin-left: auto; font-size: 12px; color: var(--text-light); transition: transform .2s; }
+.emotion-category.open h3 .arrow { transform: rotate(90deg); }
+.emotion-words { display: none; flex-wrap: wrap; gap: 6px; padding: 12px 0 0 0; }
+.emotion-category.open .emotion-words { display: flex; }
+.emotion-word { padding: 3px 12px; background: var(--tag-bg); border-radius: 16px; font-size: 13px; cursor: pointer; transition: all .15s; }
+.emotion-word:hover { background: var(--primary-light); color: #fff; }
+.history-list { display: flex; flex-direction: column; gap: 8px; }
+.history-item { background: var(--card); border-radius: 8px; padding: 12px 16px; box-shadow: var(--shadow); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all .15s; border-left: 4px solid var(--border); }
+.history-item.type-work { border-left-color: var(--work); }
+.history-item.type-emotion { border-left-color: var(--emo); }
+.history-item:hover { transform: translateX(4px); }
+.history-date { font-weight: 700; font-size: 13px; color: var(--primary); min-width: 78px; }
+.history-badge { font-size: 11px; padding: 1px 8px; border-radius: 10px; white-space: nowrap; }
+.history-badge.work { background: #e3eef5; color: var(--work); }
+.history-badge.emotion { background: #f2e6f2; color: var(--emo); }
+.history-mood { font-size: 13px; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-score { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+.history-archived { font-size: 12px; }
+.history-detail { display: none; padding: 16px; background: var(--card); border-radius: 8px; margin-top: 4px; box-shadow: var(--shadow); }
+.history-detail.show { display: block; }
+.history-detail .detail-row { margin-bottom: 8px; }
+.history-detail .detail-label { font-size: 12px; color: var(--text-light); margin-bottom: 2px; }
+.history-detail .detail-value { font-size: 14px; }
+.history-detail .detail-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.history-detail .detail-actions button { padding: 5px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); cursor: pointer; font-size: 13px; color: var(--text); }
+.history-detail .detail-actions button:hover { border-color: var(--primary); color: var(--primary); }
+.history-detail .detail-actions button.danger:hover { border-color: var(--danger); color: var(--danger); }
+.chart-wrap { margin: 16px 0; overflow-x: auto; }
+#trendChart { display: block; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--card); border-radius: 8px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
+.stat-card .stat-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+.stat-card .stat-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+.summary-card { background: linear-gradient(135deg, #f0ede8, #faf8f4); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px; font-size: 14px; line-height: 1.9; box-shadow: var(--shadow); }
+.summary-card .summary-title { font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.tag-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tag-chip-filter { padding: 3px 12px; border-radius: 16px; background: var(--tag-bg); font-size: 12px; cursor: pointer; border: 1.5px solid transparent; }
+.tag-chip-filter.selected { background: var(--primary); color: #fff; }
+.tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--tag-bg); border-radius: 12px; font-size: 12px; }
+.tag-chip .tag-x { cursor: pointer; color: var(--text-light); font-weight: 700; }
+.tag-chip .tag-x:hover { color: var(--danger); }
+.tag-input-line { display: flex; align-items: center; gap: 8px; }
+.tip-box { background: #f0ede8; border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 13px; color: var(--text-light); margin-bottom: 16px; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+.empty-state .emoji { font-size: 36px; margin-bottom: 8px; }
+.setting-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+.setting-item:last-child { border-bottom: none; }
+.setting-item span { font-size: 14px; }
+.setting-item button { padding: 6px 16px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); cursor: pointer; font-size: 13px; color: var(--text); white-space: nowrap; }
+.setting-item button:hover { border-color: var(--primary); color: var(--primary); }
+.setting-item button.danger { border-color: var(--danger); color: var(--danger); }
+.setting-item button.danger:hover { background: var(--danger); color: #fff; }
+.filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-row select { width: auto; flex: 1; min-width: 120px; }
+.followup-box { background: #f0ede8; border-radius: 8px; padding: 10px 12px; margin-top: 8px; font-size: 13px; }
+.followup-box .fu-meta { color: var(--text-light); font-size: 11px; margin-bottom: 2px; }
+.followup-box .fu-status { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--primary-light); color: #fff; font-size: 11px; margin-right: 6px; }
+.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+.modal-mask.show { display: flex; }
+.modal { background: var(--card); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 420px; box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+.modal h3 { font-size: 16px; margin-bottom: 14px; color: var(--primary); }
+.modal .field { margin-bottom: 14px; }
+.modal .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+.modal .modal-actions button { flex: 1; padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+.modal .modal-actions .m-save { background: var(--primary); color: #fff; }
+.modal .modal-actions .m-cancel { background: var(--tag-bg); color: var(--text); }
+.archive-line { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); }
+.inbox-item { background:var(--card); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow); display:flex; align-items:flex-start; gap:10px; }
+.inbox-item .inbox-text { flex:1; font-size:14px; line-height:1.7; white-space:pre-wrap; }
+.inbox-item .inbox-meta { font-size:11px; color:var(--text-light); margin-top:4px; }
+.inbox-item .inbox-del { border:none; background:transparent; color:var(--text-light); cursor:pointer; font-size:13px; }
+.inbox-item .inbox-del:hover { color:var(--danger); }
+.area-chip { padding: 4px 12px; border-radius: 20px; background: var(--tag-bg); font-size: 13px; cursor: pointer; transition: all .15s; border: 1.5px solid transparent; user-select: none; }
+.area-chip:hover { background: #e4e0d8; }
+.area-chip.selected { background: var(--work); color: #fff; border-color: var(--work); }
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  .card { padding: 16px; }
+  .navbar .logo { font-size: 14px; }
+  .field-row { flex-direction: column; gap: 0; }
+}
+
+/* ===== 日常梳理板(梳理板模块) 样式，作用域隔离 ===== */
+#page-moodboard :root {
+  --bg:#F7F6F2; --surface:#FFFFFF; --line:#E3E1D9; --line2:#C9C6BB;
+  --ink:#2C2C2A; --ink2:#5F5E5A; --ink3:#8B8A83;
+  --purple:#EEEDFE; --purple-l:#534AB7; --purple-d:#3C3489;
+  --coral:#FAECE7; --coral-l:#993C1D; --coral-d:#712B13;
+  --teal:#E1F5EE; --teal-l:#0F6E56; --teal-d:#085041;
+}
+#page-moodboard * {box-sizing:border-box}
+#page-moodboard body {margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;font-size:14px;line-height:1.6}
+#page-moodboard .wrap {max-width:860px;margin:0 auto;padding:28px 20px 64px}
+#page-moodboard h1 {font-size:19px;font-weight:500;margin:0 0 4px}
+#page-moodboard .sub {color:var(--ink2);font-size:13px;margin:0 0 24px}
+#page-moodboard .card {background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+#page-moodboard .card h2 {font-size:14px;font-weight:500;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+#page-moodboard .card h2 .tag {font-size:11px;font-weight:400;color:var(--ink3);border:1px solid var(--line2);
+  border-radius:20px;padding:1px 9px}
+#page-moodboard label {display:block;font-size:12px;color:var(--ink2);margin:12px 0 5px}
+#page-moodboard label:first-of-type {margin-top:0}
+#page-moodboard input[type=text], #page-moodboard input[type=datetime-local], #page-moodboard textarea {
+  width:100%;padding:8px 10px;border:1px solid var(--line2);border-radius:8px;
+  background:#fff;color:var(--ink);font-size:14px;font-family:inherit}
+#page-moodboard textarea {resize:vertical;min-height:52px}
+#page-moodboard input:focus, #page-moodboard textarea:focus {outline:none;border-color:var(--purple-l)}
+#page-moodboard .chips {display:flex;flex-wrap:wrap;gap:7px}
+#page-moodboard .chip {border:1px solid var(--line2);background:#fff;color:var(--ink2);border-radius:20px;
+  padding:5px 13px;font-size:13px;cursor:pointer;font-family:inherit}
+#page-moodboard .chip:hover {border-color:var(--purple-l);color:var(--purple-d)}
+#page-moodboard .chip.on {background:var(--purple);border-color:var(--purple-l);color:var(--purple-d)}
+#page-moodboard .chip.lv.on {background:var(--coral);border-color:var(--coral-l);color:var(--coral-d)}
+#page-moodboard button.act {background:var(--ink);color:#fff;border:0;border-radius:8px;padding:9px 18px;
+  font-size:14px;cursor:pointer;font-family:inherit;margin-top:16px}
+#page-moodboard button.act:hover {opacity:.87}
+#page-moodboard button.ghost {background:#fff;color:var(--ink2);border:1px solid var(--line2);
+  border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit}
+#page-moodboard button.ghost:hover {border-color:var(--ink2);color:var(--ink)}
+#page-moodboard .row {display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#page-moodboard .hint {font-size:12px;color:var(--ink3);margin-top:6px}
+#page-moodboard .verdict {border-radius:10px;padding:13px 15px;font-size:13px;margin-bottom:14px}
+#page-moodboard .v-none {background:var(--bg);border:1px dashed var(--line2);color:var(--ink2)}
+#page-moodboard .v-in {background:var(--purple);border:1px solid var(--purple-l);color:var(--purple-d)}
+#page-moodboard .v-out {background:var(--coral);border:1px solid var(--coral-l);color:var(--coral-d)}
+#page-moodboard .bar {margin-bottom:9px}
+#page-moodboard .bar .lb {display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin-bottom:3px}
+#page-moodboard .bar .tr {height:7px;background:var(--bg);border-radius:4px;overflow:hidden}
+#page-moodboard .bar .fl {height:100%;border-radius:4px}
+#page-moodboard .fl-a {background:var(--purple-l)}
+#page-moodboard .fl-b {background:var(--coral-l)}
+#page-moodboard .fl-c {background:var(--teal-l)}
+#page-moodboard .cols {display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){
+#page-moodboard .cols {grid-template-columns:1fr}
+}
+#page-moodboard .rec {border-bottom:1px solid var(--line);padding:11px 0;display:flex;gap:12px;align-items:flex-start}
+#page-moodboard .rec:last-child {border-bottom:0}
+#page-moodboard .rec .t {font-size:12px;color:var(--ink3);white-space:nowrap;min-width:92px}
+#page-moodboard .rec .b {flex:1;min-width:0}
+#page-moodboard .rec .sc {font-weight:500}
+#page-moodboard .rec .mt {font-size:12px;color:var(--ink2);margin-top:2px}
+#page-moodboard .rec .del {color:var(--ink3);background:none;border:0;cursor:pointer;font-size:12px;font-family:inherit}
+#page-moodboard .rec .del:hover {color:var(--coral-l)}
+#page-moodboard .pr {border-left:3px solid var(--teal-l);background:var(--teal);border-radius:0 8px 8px 0;
+  padding:10px 13px;margin-bottom:9px;font-size:13px}
+#page-moodboard .pr .x {float:right;color:var(--teal-l);background:none;border:0;cursor:pointer;font-size:12px;font-family:inherit}
+#page-moodboard .pr .z {color:var(--teal-l);font-size:12px;margin-top:3px}
+#page-moodboard .empty {color:var(--ink3);font-size:13px}
+#page-moodboard .tools {display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">🐾 工作<span>情绪</span>台</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="work">📝 工作记录</button>
+    <button class="nav-tab" data-page="emotion">🌈 情绪记录</button>
+    <button class="nav-tab" data-page="review">📊 复盘</button>
+    <button class="nav-tab" data-page="inbox">📥 收集箱</button>
+    <button class="nav-tab" data-page="dictionary">📖 词典</button>
+    <button class="nav-tab" data-page="settings">⚙️ 设置</button>
+    <button class="nav-tab" data-page="moodboard">🗂️ 梳理板</button>
+  </div>
+</nav>
+
+<!-- ============ 工作记录页 ============ -->
+<div class="page active" id="page-work">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">工作记录</div>
+      <div class="tip-box">💡 随手记录，一天可记多次，也可不记。写给自己看的，不用修饰。</div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">日期</label><input type="date" id="workDate"></div>
+        <div class="field"><label class="field-label">时间</label><input type="time" id="workTime"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">能量水平</label>
+        <div class="btn-group" id="workEnergyGroup">
+          <button data-val="低">🔋 低</button>
+          <button data-val="中">🔋🔋 中</button>
+          <button data-val="高">🔋🔋🔋 高</button>
+        </div>
+      </div>
+      <div class="field"><label class="field-label">完成的事项</label><textarea id="workDone" placeholder="今天推进了什么？"></textarea></div>
+      <div class="field"><label class="field-label">待办 / 遗留</label><textarea id="workTodo" placeholder="还有什么没做完、要跟进的？"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">亮点 / 成就</label><textarea id="workHighlight" placeholder="哪怕小事，值得记一笔"></textarea></div>
+        <div class="field"><label class="field-label">困难 / 阻碍</label><textarea id="workBlocker" placeholder="卡在哪？需要什么支持？"></textarea></div>
+      </div>
+      <div class="field">
+        <label class="field-label">标签（回车或逗号添加，如 #会议 #加班 #项目A）</label>
+        <div class="tag-input-line">
+          <input type="text" id="workTagInput" placeholder="输入标签后回车…">
+        </div>
+        <div class="tag-chips" id="workTagChips"></div>
+      </div>
+      <button class="btn-save work" id="btnSaveWork">💾 保存工作记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 情绪记录页 ============ -->
+<div class="page" id="page-emotion">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">情绪记录</div>
+      <div class="tip-box">💡 基于 CBT 认知行为疗法框架：事件 → 命名情绪 → 捕捉想法 → 识别偏差 → 重塑认知 → 落地行动。先跑一段，不合手再调。</div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">日期</label><input type="date" id="emoDate"></div>
+        <div class="field"><label class="field-label">时间</label><input type="time" id="emoTime"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">整体情绪评分（1=极度低落，10=极度愉悦）</label>
+        <div class="slider-wrap"><input type="range" min="1" max="10" value="5" id="emoScore"><span class="slider-value" id="emoScoreVal">5</span></div>
+      </div>
+      <div class="field">
+        <label class="field-label">主情绪（可多选，去词典页找更精准的词）</label>
+        <div class="mood-selector" id="emoMoodTags"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">关联的生活领域（可多选，哪些日常事项今天和你的情绪连在一起？）</label>
+        <div class="mood-selector" id="emoAreaChips"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">这些领域对今天情绪的影响强度</label>
+        <div class="slider-wrap"><input type="range" min="1" max="10" value="5" id="emoAreaIntensity"><span class="slider-value" id="emoAreaIntensityVal">5</span></div>
+      </div>
+      <div class="field"><label class="field-label">它们具体怎么影响了你？（具象化感受）</label><textarea id="emoAreaNote" placeholder="比如：昨晚没睡好，今早一直昏沉、耐心也变差…"></textarea></div>
+    </div>
+    <div class="card">
+      <div class="card-title">情绪察觉（慢慢来，按需填）</div>
+      <div class="tip-box">💡 不是每一步都得写，也没有"写错"这回事。想法没有对错，这些步骤只是帮你把当时的情况看得全一点。</div>
+      <div class="field"><label class="field-label">1. 触发情境（只写客观事实，不加评判）</label><textarea id="emoSituation" placeholder="发生了什么？时间地点人物事件…像摄像头一样描述"></textarea></div>
+      <div class="field">
+        <label class="field-label">2. 情绪命名 & 强度（正向、负向都欢迎）</label>
+        <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+          <input type="text" id="emoEmotion" placeholder="如：平静、满足、好奇，也可能是焦虑、委屈…" style="flex:1; min-width:160px;">
+          <div class="slider-wrap" style="min-width:160px;"><input type="range" min="1" max="10" value="5" id="emoIntensity"><span class="slider-value" id="emoIntensityVal">5</span></div>
+        </div>
+      </div>
+      <div class="field"><label class="field-label">3. 身体感受（放松或紧绷，都值得记）</label><input type="text" id="emoBody" placeholder="比如：肩颈放松、呼吸变缓、胸口暖暖的；或心跳快、肩紧、胃沉…"></div>
+      <div class="field"><label class="field-label">4. 当时脑中冒出的想法（只是记下，不评判对错）</label><textarea id="emoThought" placeholder="当时我脑中第一反应是…？它在替我说什么？"></textarea></div>
+      <div class="field">
+        <label class="field-label">5. 想法的小陷阱（可选参考）</label>
+        <div class="tip-box">💡 有时想法会被放大或绝对化。下面这些"思维小陷阱"只作参考，勾到哪个算哪个；一个都没有也完全正常——这不代表你"想错了"。</div>
+        <div class="checkbox-group" id="distortionGroup"></div>
+      </div>
+      <div class="field"><label class="field-label">6. 换个角度看（可选）</label><textarea id="emoReframe" placeholder="这个想法完整吗？有没有被忽略的好的一面、或其他可能？一时想不到就空着，没关系。"></textarea></div>
+      <div class="field">
+        <label class="field-label">7. 行动瓶（参考《安心》：针对在意的事，做了/想做点什么来改善？）</label>
+        <textarea id="emoAction" placeholder="针对让你在意或有压力的事，你已经做了什么，或想做一件小小的行动来改善情绪？暂时想不到能做什么、想先不动，也完全可以——那就安心去安顿自己。"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">这件事我能着手改善吗？</label>
+        <div class="btn-group" id="emoImproveGroup">
+          <button data-val="能改善">💪 能改善</button>
+          <button data-val="暂时不能">🕊 暂时不能</button>
+        </div>
+      </div>
+      <div class="field"><label class="field-label">接纳练习 / 自愈瓶：我打算怎么安顿自己？</label><textarea id="emoSelfHeal" placeholder="允许自己暂时做不到；做点让自己舒服的小事…"></textarea></div>
+      <div class="field"><label class="field-label">看不见的成本：这件事悄悄消耗了你什么？（时间 / 精力 / 情绪 / 关系 / 机会）</label><textarea id="emoHiddenCost" placeholder="真正吞掉你的，往往是看不见的成本——比如为省钱多花的半小时、反复内耗的念头、被挤占的休息…"></textarea></div>
+    </div>
+    <div class="card">
+      <div class="card-title">自由书写</div>
+      <div class="field"><label class="field-label">想到什么写什么</label><textarea id="emoFree" style="min-height:90px;"></textarea></div>
+      <div class="field">
+        <label class="field-label">标签（回车或逗号添加）</label>
+        <input type="text" id="emoTagInput" placeholder="输入标签后回车…">
+        <div class="tag-chips" id="emoTagChips"></div>
+      </div>
+      <button class="btn-save emo" id="btnSaveEmo">💾 保存情绪记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 复盘页 ============ -->
+<div class="page" id="page-review">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">筛选 & 自动小结</div>
+      <div class="filter-row">
+        <select id="rangeSelect">
+          <option value="all">全部</option>
+          <option value="7">近 7 天</option>
+          <option value="30">近 30 天</option>
+          <option value="month">本月</option>
+          <option value="year">本年</option>
+        </select>
+        <select id="typeSelect">
+          <option value="all">全部类型</option>
+          <option value="work">仅工作</option>
+          <option value="emotion">仅情绪</option>
+        </select>
+      </div>
+      <div class="tag-filter" id="tagFilter"></div>
+      <div class="summary-card" id="summaryCard"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔍 主要矛盾洞察</div>
+      <div class="tip-box">按标签出现频率 × 情绪强度聚合，找出当前最该被看见的矛盾点。范围随上方筛选联动。</div>
+      <div id="insightCard"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">💡 看不见的成本</div>
+      <div class="tip-box">真正吞掉你的，往往是看不见的成本（时间 / 精力 / 情绪 / 关系 / 机会）。这里汇总你在情绪记录里写下的「隐性成本觉察」。</div>
+      <div id="hiddenCostCard"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">情绪趋势</div>
+      <div class="chart-wrap"><canvas id="trendChart" width="760" height="200"></canvas></div>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">时间线（工作 + 情绪）</div>
+      <div class="history-list" id="timelineList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 词典页 ============ -->
+<div class="page" id="page-dictionary">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">情绪词典</div>
+      <div class="tip-box">💡 精准命名情绪是觉察第一步。点词汇可复制。</div>
+      <div id="dictionaryContent"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">常见认知偏差</div>
+      <div id="distortionDictionary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 设置页 ============ -->
+<div class="page" id="page-settings">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">手机 ↔ 电脑同步</div>
+      <div class="tip-box">
+        💡 这是个纯本地文件，拷到任何设备用浏览器打开都能用。<br>
+        换设备同步步骤：在旧设备「导出数据」→ 把生成的 JSON 发到新设备 → 新设备打开本文件点「导入数据」即可（不会丢已有记录）。
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">数据管理</div>
+      <div class="setting-item"><span>导出数据（JSON 备份 / 同步用）</span><button onclick="exportData()">导出</button></div>
+      <div class="setting-item"><span>导出 Markdown（可读备份 / 周报底稿）</span><button onclick="exportMarkdown()">导出 MD</button></div>
+      <div class="setting-item"><span>导入数据（合并，不覆盖）</span><button onclick="document.getElementById('importFile').click()">导入</button><input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)"></div>
+      <div class="setting-item"><span>清除全部数据（不可恢复）</span><button class="danger" onclick="clearAllData()">清除</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">云端备份（GitHub Gist）</div>
+      <div class="tip-box">
+        💡 私人、免费、自动同步。数据会备份到一个<strong>私密 Gist</strong>（只有你能看，链接不公开）。<br>
+        需要一个 GitHub 个人访问令牌（token），生成时勾选 <code>gist</code> 权限即可。<br>
+        ⚠️ token 会明文存在本机浏览器，仅用于本地调用；建议用专属小号 token，用完可随时撤销。
+      </div>
+      <div class="field">
+        <label class="field-label">GitHub Token（需 gist 权限）</label>
+        <input type="password" id="gistToken" placeholder="ghp_...">
+      </div>
+      <div class="setting-item">
+        <span>自动同步（保存记录后自动备份）</span>
+        <input type="checkbox" id="gistAuto" checked style="accent-color:var(--primary);">
+      </div>
+      <div class="setting-item">
+        <span>备份状态</span>
+        <span id="gistStatus" style="font-size:13px;color:var(--text-light);">未配置</span>
+      </div>
+      <div class="setting-item">
+        <span>已绑定 Gist</span>
+        <span id="gistIdText" style="font-size:12px;color:var(--text-light);">—</span>
+      </div>
+      <div class="btn-group" style="margin-top:12px;">
+        <button id="btnGistSaveToken">保存令牌</button>
+        <button id="btnGistBackup">立即备份</button>
+        <button id="btnGistRestore">从云端恢复</button>
+        <button id="btnGistDisconnect" class="danger">断开</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">关于</div>
+      <p style="font-size:13px; color:var(--text-light); line-height:1.8;">
+        🐾 工作情绪工作台 · 离线版<br>
+        融合 CBT 情绪察觉框架与日常工作记录，支持多记录、标签、追记归档。<br>
+        数据仅存本地浏览器，离线可用。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 收集箱页 ============ -->
+<div class="page" id="page-inbox">
+  <div class="container">
+    <div class="card">
+      <div class="card-title">📥 快速收集箱</div>
+      <div class="tip-box">💡 脑子里的待办先「倒出来」：随手记一条未完成的事，不做分类、不提醒。需要时再来整理，或转成正式记录。</div>
+      <div class="field"><label class="field-label">现在想到什么？</label><textarea id="inboxInput" placeholder="比如：周末想整理一下书架 / 得回一下王姐的消息"></textarea></div>
+      <div class="field" style="display:flex; justify-content:flex-end;">
+        <button class="btn-save" style="width:auto; padding:10px 22px;" onclick="addInbox()">➕ 放入收集箱</button>
+      </div>
+    </div>
+    <div id="inboxList"></div>
+  </div>
+</div>
+
+<!-- 追记弹窗 -->
+<div class="modal-mask" id="followupMask">
+  <div class="modal">
+    <h3>追记这条记录</h3>
+    <div class="field">
+      <label class="field-label">状态</label>
+      <select id="fuStatus">
+        <option value="释怀了">🕊 释怀了</option>
+        <option value="已放下">✌ 已放下</option>
+        <option value="有新体悟">💡 有新体悟</option>
+        <option value="其他">✏ 其他</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">写下你的新感受 / 体悟</label>
+      <textarea id="fuContent" style="min-height:90px;" placeholder="回头看这件事，现在是什么感觉？"></textarea>
+    </div>
+    <label class="archive-line"><input type="checkbox" id="fuArchive" checked> 标记为已释怀 / 归档</label>
+    <div class="modal-actions">
+      <button class="m-cancel" onclick="closeFollowup()">取消</button>
+      <button class="m-save" onclick="saveFollowup()">保存追记</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<!-- ============ 梳理板页（日常梳理板合并而来） ============ -->
+<div class="page" id="page-moodboard">
+<div class="wrap" data-page-node-id="wwcVGxOHOjNoisXDyhL8rF">
+<h1 data-page-node-id="0AxC05894c0SnW0SEhpRUB">日常梳理板</h1>
+<p class="sub" data-page-node-id="vnLyPGmutGt7V9lA30CCod">离线可用，数据只存在这台电脑的浏览器里。前两周只记录，不分析。</p>
+
+<div class="card" data-page-node-id="EvBgqwZqGGuZ98zae3ANZk">
+<h2 data-page-node-id="0hZug4b4Rrni0tT4WB6p4T">快速记一笔 <span class="tag" data-page-node-id="MLz1kGwEhjHH7UPL43fufn">触发 → 身体感觉 → 被撞的期待</span></h2>
+<label data-page-node-id="OWQc622cXHPsnKHQoLx56b">什么时候</label>
+<input type="datetime-local" id="when" data-page-node-id="5JrmHUJa9grMMctogaH0lC">
+<label data-page-node-id="aHvjVLusbpYnoRMLFPjCJT">当时在做什么（尽量用固定说法，方便后面比对）</label>
+<input type="text" id="scene" list="sceneList" placeholder="例：改台账 / 开班会 / 刷手机" data-page-node-id="CekkN3d0qwsU4Edh9F7MTm">
+<datalist id="sceneList" data-page-node-id="AHUDJ17LJ43l0niZVYpZM8"></datalist>
+<div class="row" style="margin-top:12px" data-page-node-id="X0XAyYxwUsPl5EIOpyyTI2">
+  <div style="flex:1;min-width:180px" data-page-node-id="mMJAhjuoa4MfrRx09fwZpz">
+    <label data-page-node-id="eTGvLIRTbdwLVRX3yIkMX4">和谁（可空）</label>
+    <input type="text" id="who" placeholder="例：主管 / 同事 / 独自" data-page-node-id="tdoi5kPvxEzoMYGlWAr3Rt">
+  </div>
+  <div style="flex:1;min-width:180px" data-page-node-id="mk5hZoA29r29aDVvIK7zCy">
+    <label data-page-node-id="y0pvstyxnYpcoJCViW7T0J">强度</label>
+    <div class="chips" id="lv" data-page-node-id="4OTIiCFkFRODS53FAteHvS"></div>
+  </div>
+</div>
+<label data-page-node-id="UOcNzYmPV5ajXSE9rqJB6L">身体感觉（选一个）</label>
+<div class="chips" id="feel" data-page-node-id="6zBROQIHutwyhS95mibISo"></div>
+<input type="text" id="feelOther" placeholder="上面没有就自己写一个，可空" style="margin-top:7px" data-page-node-id="gwa4WOQWCox4Gao41AKe2Q">
+<label data-page-node-id="0mumrp1EgRCQzzK00qDxau">被撞到的自我期待（可空）</label>
+<input type="text" id="expect" placeholder="例：我本该把这件事一次做对" data-page-node-id="3wWUf13rQChNmWnd9AV1p8">
+<button class="act" id="save" data-page-node-id="5DmmcfzBCIxQgbhErrosOh">记下</button>
+<span class="hint" id="saveHint" data-page-node-id="4ZCyW4UsOkrHZyHguTdRlB"></span>
+</div>
+
+<div class="card" data-page-node-id="3BR85RQ9tokhLJyxoIQIZP">
+<h2 data-page-node-id="fo2y6Y9qs4woVoilr3IzWW">分布 <span class="tag" data-page-node-id="lH14LKJVrrXsGMVh5AyUEC">马斯克：闷是弥散还是集中</span></h2>
+<div id="verdict" class="verdict v-none" data-page-node-id="ce7Vl2LCLakFkqxYzjGMZx"></div>
+<div class="cols" data-page-node-id="eBRXC7d4cQilzApyHuWHy8">
+  <div data-page-node-id="YZw8yhB5u3d2jeoZIMw6N1">
+    <div style="font-size:12px;color:var(--ink2);margin-bottom:8px" data-page-node-id="Mdyjoxm6qlBGm56BFUwOIu">按时段</div>
+    <div id="bySlot" data-page-node-id="CYgpmMMMGt4Byu92KgQE0J"></div>
+  </div>
+  <div data-page-node-id="cXjIm31Xpmy3hT7rLyQ5Ow">
+    <div style="font-size:12px;color:var(--ink2);margin-bottom:8px" data-page-node-id="HWBbxq4eCctdq2hdeVFaOl">按事情</div>
+    <div id="byScene" data-page-node-id="FB8VQn2qGDMRRYCE2B6Cvg"></div>
+  </div>
+</div>
+<div style="margin-top:18px" data-page-node-id="TJ2ABodriQvygjgi5AYAnc">
+  <div style="font-size:12px;color:var(--ink2);margin-bottom:8px" data-page-node-id="9WP37x6PzYPBveCiuH79yr">按身体感觉（荣格：闷在用的语言）</div>
+  <div id="byFeel" data-page-node-id="gH3EHlpaW1eQEufel5owFg"></div>
+</div>
+</div>
+
+<div class="card" data-page-node-id="p1rRKcCFWuNfpWJVgm4E5D">
+<h2 data-page-node-id="kUZQcxYo056p4UyAlLU26Q">原则库 <span class="tag" data-page-node-id="HbLPBVLcHTjPDxuvGrnX1S">达里奥：当X发生时，我做Y，因为Z</span></h2>
+<div id="prList" data-page-node-id="KBcYXXipVW2Oghf5KBW3wL"></div>
+<div class="row" style="margin-top:12px" data-page-node-id="DCHbOCVFdnYDKlGoeRYOUp">
+  <input type="text" id="pWhen" placeholder="当……发生时" style="flex:1;min-width:150px" data-page-node-id="HZSrKKxw54YKG5HFlzKikW">
+  <input type="text" id="pDo" placeholder="我做……" style="flex:1;min-width:150px" data-page-node-id="4hLnMlShvFyDOpK1HptCyV">
+  <input type="text" id="pWhy" placeholder="因为……" style="flex:1;min-width:150px" data-page-node-id="MCmkjmNaE95ZtbUBMa6kEL">
+</div>
+<button class="act" id="addPr" data-page-node-id="S0InpQKD9i6ZcFCq2jqpz9">存成原则</button>
+<span class="hint" data-page-node-id="Kr0LrtKEYEKLxX2wwRTmt8">每周挑一条就够。空着不丢人，硬凑才丢人。</span>
+</div>
+
+<div class="card" data-page-node-id="lZkLTWjzIWPFunHJDHJYbH">
+<h2 data-page-node-id="vr62xFFIJ7hkh7MBRg2Ojb">记录 <span class="tag" data-page-node-id="Fd7co6yoOAp6mzZFpbbaj3">倒序</span></h2>
+<div class="tools" data-page-node-id="jZaxzwPRAcpN9q5w0nswLS">
+  <button class="ghost" id="exp" data-page-node-id="E3jIp2QvPNlVn6nMCsEjEB">导出为 Markdown</button>
+  <button class="ghost" id="clr" data-page-node-id="VyF6Qfp2v1D1o09QwkbdN1">清空全部</button>
+</div>
+<div id="recList" data-page-node-id="AMf8fEmupf80jXwAFy14wz"></div>
+</div>
+</div>
+</div>
+
+<script>
+// ==================== 数据 ====================
+const STORAGE_KEY = 'workEmotionJournal_v2';
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); const d = raw ? JSON.parse(raw) : {entries:[]}; if(!d.entries) d.entries=[]; return d; }
+  catch(e) { return {entries:[]}; }
+}
+function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); scheduleGistBackup(); }
+function findEntry(id) { return loadData().entries.find(e => e.id === id); }
+
+// ==================== 词典数据 ====================
+const EMOTION_DICT = [
+  { cat: '快乐 / 喜悦', icon: '😊', words: ['开心','高兴','快乐','兴奋','愉快','喜悦','雀跃','满足','幸福','轻松','平静','安心','释怀','宽慰','得意','舒畅','欣慰','畅快','欣喜','心花怒放'] },
+  { cat: '愤怒 / 气愤', icon: '😠', words: ['生气','烦躁','恼火','气愤','不满','愤恨','暴躁','不耐烦','焦躁','恼怒','窝火','气恼','憋屈','恼羞成怒','义愤'] },
+  { cat: '悲伤 / 哀痛', icon: '😢', words: ['难过','失落','沮丧','伤心','委屈','失望','郁闷','空虚','无奈','孤独','无助','绝望','遗憾','心痛','气馁','落寞','哀伤','低落'] },
+  { cat: '恐惧 / 焦虑', icon: '😨', words: ['紧张','担心','害怕','焦虑','不安','慌张','恐惧','忧虑','忐忑','惶恐','心慌','畏惧','发憷','疑虑','心神不宁'] },
+  { cat: '惊讶 / 震惊', icon: '😲', words: ['惊讶','震惊','诧异','愕然','惊喜','吃惊','意外','叹为观止','难以置信'] },
+  { cat: '厌恶 / 排斥', icon: '😒', words: ['讨厌','反感','厌恶','嫌弃','轻蔑','鄙视','厌烦','嫌恶','排斥','不耐烦'] },
+  { cat: '羞耻 / 内疚', icon: '😳', words: ['尴尬','内疚','自责','惭愧','懊悔','羞愧','自卑','难堪','歉疚','悔恨','不好意思'] },
+  { cat: '爱 / 连接', icon: '🥰', words: ['感动','温暖','感恩','被爱','被接纳','被理解','信任','亲密','安心','归属','被需要','被重视'] },
+];
+const DISTORTIONS = [
+  { name: '非黑即白', desc: '只有成功或失败两极，没有中间地带' },
+  { name: '以偏概全', desc: '一次负面经历就认定「总是」「永远」' },
+  { name: '读心术', desc: '没有证据就断定别人在想什么' },
+  { name: '灾难化', desc: '预想最坏的结果' },
+  { name: '情绪推理', desc: '感觉=事实' },
+  { name: '贴标签', desc: '给自己或他人贴固定标签' },
+  { name: '应该陈述', desc: '用「应该」「必须」要求自己或他人' },
+  { name: '否定正面', desc: '拒绝承认积极面' },
+  { name: '个人化', desc: '把不相关的事归因于自己' },
+  { name: '过度概括', desc: '从单一事件推导普遍结论' },
+];
+const QUICK_MOODS = ['平静','开心','快乐','满足','兴奋','乐观','感激','疲惫','焦虑','紧张','烦躁','低落','愤怒','委屈','迷茫','孤独','无助','失望','矛盾','无力'];
+const LIFE_AREAS = ['天气','饮食','睡眠','运动','穿搭','居住','爱好','娱乐','专注','人际','成长','财富','工作','健康','其他'];
+
+// ==================== 工具 ====================
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function hm(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function esc(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+// ==================== 导航 ====================
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-'+tab.dataset.page).classList.add('active');
+    if (tab.dataset.page === 'review') renderReview();
+    if (tab.dataset.page === 'inbox') renderInbox();
+  });
+});
+
+// ==================== 标签输入组件 ====================
+function createTagInput(chipsId, inputId) {
+  const chips = document.getElementById(chipsId);
+  const input = document.getElementById(inputId);
+  let tags = [];
+  function render() {
+    chips.innerHTML = '';
+    tags.forEach((t,i) => {
+      const span = document.createElement('span');
+      span.className = 'tag-chip';
+      span.innerHTML = t + ' <span class="tag-x">×</span>';
+      span.querySelector('.tag-x').onclick = () => { tags.splice(i,1); render(); };
+      chips.appendChild(span);
+    });
+  }
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const v = input.value.trim().replace(/^#/, '');
+      if (v && !tags.includes(v)) tags.push(v);
+      input.value = ''; render();
+    }
+  });
+  return { get: () => tags, set: a => { tags = a||[]; render(); }, clear: () => { tags=[]; render(); } };
+}
+const workTags = createTagInput('workTagChips', 'workTagInput');
+const emoTags = createTagInput('emoTagChips', 'emoTagInput');
+
+// ==================== 初始化时间 ====================
+const now = new Date();
+document.getElementById('workDate').value = ymd(now);
+document.getElementById('workTime').value = hm(now);
+document.getElementById('emoDate').value = ymd(now);
+document.getElementById('emoTime').value = hm(now);
+
+// ==================== 工作记录 ====================
+let workEnergy = '';
+document.querySelectorAll('#workEnergyGroup button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#workEnergyGroup button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); workEnergy = btn.dataset.val;
+  });
+});
+let editingWorkId = null;
+document.getElementById('btnSaveWork').addEventListener('click', () => {
+  const data = loadData();
+  const entry = {
+    type: 'work',
+    date: document.getElementById('workDate').value,
+    time: document.getElementById('workTime').value,
+    energy: workEnergy,
+    workDone: document.getElementById('workDone').value,
+    workTodo: document.getElementById('workTodo').value,
+    workHighlight: document.getElementById('workHighlight').value,
+    workBlocker: document.getElementById('workBlocker').value,
+    tags: workTags.get(),
+  };
+  if (editingWorkId) {
+    const old = data.entries.find(e => e.id === editingWorkId);
+    entry.id = editingWorkId; entry.followups = old.followups || []; entry.archived = old.archived || false;
+    const idx = data.entries.findIndex(e => e.id === editingWorkId);
+    data.entries[idx] = entry; editingWorkId = null;
+    saveData(data); showToast('✅ 已更新工作记录');
+  } else {
+    entry.id = Date.now(); entry.followups = []; entry.archived = false;
+    data.entries.push(entry); saveData(data); showToast('✅ 已保存工作记录');
+  }
+  resetWorkForm();
+  renderReview();
+});
+function resetWorkForm() {
+  const n = new Date();
+  document.getElementById('workDate').value = ymd(n); document.getElementById('workTime').value = hm(n);
+  workEnergy = ''; document.querySelectorAll('#workEnergyGroup button').forEach(b => b.classList.remove('selected'));
+  ['workDone','workTodo','workHighlight','workBlocker'].forEach(id => document.getElementById(id).value = '');
+  workTags.clear();
+}
+
+// ==================== 情绪记录 ====================
+const emoScore = document.getElementById('emoScore'), emoScoreVal = document.getElementById('emoScoreVal');
+emoScore.addEventListener('input', () => emoScoreVal.textContent = emoScore.value);
+const emoIntensity = document.getElementById('emoIntensity'), emoIntensityVal = document.getElementById('emoIntensityVal');
+emoIntensity.addEventListener('input', () => emoIntensityVal.textContent = emoIntensity.value);
+const emoMoodTagsEl = document.getElementById('emoMoodTags');
+let selectedMoods = [];
+QUICK_MOODS.forEach(m => {
+  const tag = document.createElement('span'); tag.className = 'mood-tag'; tag.textContent = m;
+  tag.addEventListener('click', () => {
+    tag.classList.toggle('selected');
+    if (tag.classList.contains('selected')) { if(!selectedMoods.includes(m)) selectedMoods.push(m); }
+    else selectedMoods = selectedMoods.filter(x => x !== m);
+  });
+  emoMoodTagsEl.appendChild(tag);
+});
+const emoAreaChipsEl = document.getElementById('emoAreaChips');
+let selectedAreas = [];
+LIFE_AREAS.forEach(a => {
+  const tag = document.createElement('span'); tag.className = 'area-chip'; tag.textContent = a;
+  tag.addEventListener('click', () => {
+    tag.classList.toggle('selected');
+    if (tag.classList.contains('selected')) { if(!selectedAreas.includes(a)) selectedAreas.push(a); }
+    else selectedAreas = selectedAreas.filter(x => x !== a);
+  });
+  emoAreaChipsEl.appendChild(tag);
+});
+const emoAreaIntensity = document.getElementById('emoAreaIntensity'), emoAreaIntensityVal = document.getElementById('emoAreaIntensityVal');
+emoAreaIntensity.addEventListener('input', () => emoAreaIntensityVal.textContent = emoAreaIntensity.value);
+let emoImprove = '';
+document.querySelectorAll('#emoImproveGroup button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#emoImproveGroup button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected'); emoImprove = btn.dataset.val;
+  });
+});
+const distortionGroup = document.getElementById('distortionGroup');
+DISTORTIONS.forEach(d => {
+  const label = document.createElement('label'); label.className = 'checkbox-item';
+  label.innerHTML = '<input type="checkbox" value="'+d.name+'"> '+d.name;
+  distortionGroup.appendChild(label);
+});
+let editingEmoId = null;
+document.getElementById('btnSaveEmo').addEventListener('click', () => {
+  const data = loadData();
+  const distortions = Array.from(distortionGroup.querySelectorAll('input:checked')).map(c => c.value);
+  const entry = {
+    type: 'emotion',
+    date: document.getElementById('emoDate').value,
+    time: document.getElementById('emoTime').value,
+    moodScore: parseInt(emoScore.value),
+    moods: [...selectedMoods],
+    emoSituation: document.getElementById('emoSituation').value,
+    emoEmotion: document.getElementById('emoEmotion').value,
+    emoIntensity: parseInt(emoIntensity.value),
+    emoBody: document.getElementById('emoBody').value,
+    emoThought: document.getElementById('emoThought').value,
+    emoDistortions: distortions,
+    emoReframe: document.getElementById('emoReframe').value,
+    emoAction: document.getElementById('emoAction').value,
+    emoFree: document.getElementById('emoFree').value,
+    lifeAreas: [...selectedAreas],
+    areaIntensity: parseInt(emoAreaIntensity.value),
+    areaNote: document.getElementById('emoAreaNote').value,
+    improve: emoImprove,
+    selfHeal: document.getElementById('emoSelfHeal').value,
+    emoHiddenCost: document.getElementById('emoHiddenCost').value,
+    tags: emoTags.get(),
+  };
+  if (editingEmoId) {
+    const old = data.entries.find(e => e.id === editingEmoId);
+    entry.id = editingEmoId; entry.followups = old.followups || []; entry.archived = old.archived || false;
+    const idx = data.entries.findIndex(e => e.id === editingEmoId);
+    data.entries[idx] = entry; editingEmoId = null;
+    saveData(data); showToast('✅ 已更新情绪记录');
+  } else {
+    entry.id = Date.now(); entry.followups = []; entry.archived = false;
+    data.entries.push(entry); saveData(data); showToast('✅ 已保存情绪记录');
+  }
+  resetEmoForm();
+  renderReview();
+});
+function resetEmoForm() {
+  const n = new Date();
+  document.getElementById('emoDate').value = ymd(n); document.getElementById('emoTime').value = hm(n);
+  emoScore.value = 5; emoScoreVal.textContent = '5';
+  emoIntensity.value = 5; emoIntensityVal.textContent = '5';
+  selectedMoods = []; document.querySelectorAll('#emoMoodTags .mood-tag').forEach(t => t.classList.remove('selected'));
+  emoAreaIntensity.value = 5; emoAreaIntensityVal.textContent = '5';
+  selectedAreas = []; document.querySelectorAll('#emoAreaChips .area-chip').forEach(t => t.classList.remove('selected'));
+  emoImprove = ''; document.querySelectorAll('#emoImproveGroup button').forEach(b => b.classList.remove('selected'));
+  ['emoSituation','emoEmotion','emoBody','emoThought','emoReframe','emoAction','emoFree','emoAreaNote','emoSelfHeal','emoHiddenCost'].forEach(id => document.getElementById(id).value = '');
+  distortionGroup.querySelectorAll('input').forEach(c => c.checked = false);
+  emoTags.clear();
+}
+
+// ==================== 编辑填充 ====================
+function editEntry(id, page) {
+  const e = findEntry(id); if (!e) return;
+  if (page === 'work') {
+    editingWorkId = id;
+    document.getElementById('workDate').value = e.date; document.getElementById('workTime').value = e.time;
+    workEnergy = e.energy || '';
+    document.querySelectorAll('#workEnergyGroup button').forEach(b => b.classList.toggle('selected', b.dataset.val === workEnergy));
+    document.getElementById('workDone').value = e.workDone || '';
+    document.getElementById('workTodo').value = e.workTodo || '';
+    document.getElementById('workHighlight').value = e.workHighlight || '';
+    document.getElementById('workBlocker').value = e.workBlocker || '';
+    workTags.set(e.tags);
+    document.querySelector('.nav-tab[data-page="work"]').click();
+    document.getElementById('btnSaveWork').textContent = '💾 更新工作记录';
+  } else {
+    editingEmoId = id;
+    document.getElementById('emoDate').value = e.date; document.getElementById('emoTime').value = e.time;
+    emoScore.value = e.moodScore || 5; emoScoreVal.textContent = emoScore.value;
+    selectedMoods = e.moods || [];
+    document.querySelectorAll('#emoMoodTags .mood-tag').forEach(t => t.classList.toggle('selected', selectedMoods.includes(t.textContent)));
+    document.getElementById('emoSituation').value = e.emoSituation || '';
+    document.getElementById('emoEmotion').value = e.emoEmotion || '';
+    emoIntensity.value = e.emoIntensity || 5; emoIntensityVal.textContent = emoIntensity.value;
+    document.getElementById('emoBody').value = e.emoBody || '';
+    document.getElementById('emoThought').value = e.emoThought || '';
+    document.getElementById('emoReframe').value = e.emoReframe || '';
+    document.getElementById('emoAction').value = e.emoAction || '';
+    document.getElementById('emoFree').value = e.emoFree || '';
+    selectedAreas = e.lifeAreas || [];
+    document.querySelectorAll('#emoAreaChips .area-chip').forEach(t => t.classList.toggle('selected', selectedAreas.includes(t.textContent)));
+    emoAreaIntensity.value = e.areaIntensity || 5; emoAreaIntensityVal.textContent = emoAreaIntensity.value;
+    document.getElementById('emoAreaNote').value = e.areaNote || '';
+    emoImprove = e.improve || '';
+    document.querySelectorAll('#emoImproveGroup button').forEach(b => b.classList.toggle('selected', b.dataset.val === emoImprove));
+    document.getElementById('emoSelfHeal').value = e.selfHeal || '';
+    document.getElementById('emoHiddenCost').value = e.emoHiddenCost || '';
+    const sd = e.emoDistortions || [];
+    distortionGroup.querySelectorAll('input').forEach(c => c.checked = sd.includes(c.value));
+    emoTags.set(e.tags);
+    document.querySelector('.nav-tab[data-page="emotion"]').click();
+    document.getElementById('btnSaveEmo').textContent = '💾 更新情绪记录';
+  }
+}
+
+// ==================== 追记 ====================
+let followupId = null;
+function openFollowup(id) { followupId = id; document.getElementById('fuContent').value = ''; document.getElementById('fuStatus').value = '释怀了'; document.getElementById('fuArchive').checked = true; document.getElementById('followupMask').classList.add('show'); }
+function closeFollowup() { document.getElementById('followupMask').classList.remove('show'); followupId = null; }
+document.getElementById('fuStatus').addEventListener('change', function() { document.getElementById('fuArchive').checked = (this.value === '释怀了' || this.value === '已放下'); });
+function saveFollowup() {
+  const content = document.getElementById('fuContent').value.trim();
+  if (!content) { showToast('写点什么再保存吧'); return; }
+  const data = loadData();
+  const e = data.entries.find(x => x.id === followupId);
+  if (!e) return;
+  if (!e.followups) e.followups = [];
+  e.followups.push({ date: ymd(new Date()), time: hm(new Date()), status: document.getElementById('fuStatus').value, content });
+  if (document.getElementById('fuArchive').checked) e.archived = true;
+  saveData(data);
+  closeFollowup();
+  showToast('✅ 已追记');
+  renderReview();
+}
+
+// ==================== 删除 ====================
+function deleteEntry(id) {
+  if (!confirm('删除这条记录？不可恢复。')) return;
+  const data = loadData();
+  data.entries = data.entries.filter(e => e.id !== id);
+  saveData(data); renderReview(); showToast('已删除');
+}
+
+// ==================== 复盘 ====================
+let selectedTags = new Set();
+document.getElementById('rangeSelect').addEventListener('change', renderReview);
+document.getElementById('typeSelect').addEventListener('change', renderReview);
+
+function getFiltered() {
+  const data = loadData();
+  const range = document.getElementById('rangeSelect').value;
+  const type = document.getElementById('typeSelect').value;
+  const today = new Date();
+  let filtered = data.entries.slice();
+  if (type !== 'all') filtered = filtered.filter(e => e.type === type);
+  if (range !== 'all') {
+    filtered = filtered.filter(e => {
+      const d = new Date(e.date);
+      if (range === '7') return (today - d) <= 7*86400000 && (today - d) >= 0;
+      if (range === '30') return (today - d) <= 30*86400000 && (today - d) >= 0;
+      if (range === 'month') return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth();
+      if (range === 'year') return d.getFullYear() === today.getFullYear();
+      return true;
+    });
+  }
+  if (selectedTags.size > 0) filtered = filtered.filter(e => (e.tags||[]).some(t => selectedTags.has(t)));
+  filtered.sort((a,b) => (a.date+a.time) < (b.date+b.time) ? 1 : -1);
+  return filtered;
+}
+
+function renderReview() {
+  const entries = getFiltered();
+  renderSummary(entries);
+  renderTagFilter();
+  renderStats(entries);
+  renderTrend(entries);
+  renderInsight(entries);
+  renderHiddenCost(entries);
+  renderTimeline(entries);
+}
+
+function renderSummary(entries) {
+  const card = document.getElementById('summaryCard');
+  if (!entries.length) { card.innerHTML = '<div class="summary-title">自动小结</div>该范围暂无记录，去记一条吧。'; return; }
+  const workE = entries.filter(e => e.type==='work').length;
+  const emoE = entries.filter(e => e.type==='emotion').length;
+  const scores = entries.filter(e => e.type==='emotion' && e.moodScore).map(e => e.moodScore);
+  const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
+  const moodCount = {}; entries.filter(e=>e.type==='emotion').forEach(e => (e.moods||[]).forEach(m => moodCount[m]=(moodCount[m]||0)+1));
+  const topMoods = Object.entries(moodCount).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]).join('、') || '—';
+  const tagCount = {}; entries.forEach(e => (e.tags||[]).forEach(t => tagCount[t]=(tagCount[t]||0)+1));
+  const topTags = Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]).join('、') || '—';
+  const areaCount = {}; entries.filter(e=>e.type==='emotion').forEach(e => (e.lifeAreas||[]).forEach(t => areaCount[t]=(areaCount[t]||0)+1));
+  const topAreas = Object.entries(areaCount).sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>x[0]).join('、') || '—';
+  const archived = entries.filter(e => e.archived).length;
+  card.innerHTML = '<div class="summary-title">📌 自动小结（'+entries.length+' 条）</div>' +
+    '工作 '+workE+' 条 · 情绪 '+emoE+' 条。<br>' +
+    '情绪平均分 <b>'+avg+'</b> / 10；高频情绪：'+topMoods+'。<br>' +
+    '高频标签：'+topTags+'。<br>' +
+    '常关联的生活领域：'+topAreas+'。<br>' +
+    '已释怀 / 归档 <b>'+archived+'</b> 条。';
+}
+
+function renderTagFilter() {
+  const cont = document.getElementById('tagFilter');
+  const allTags = {};
+  loadData().entries.forEach(e => (e.tags||[]).forEach(t => allTags[t]=(allTags[t]||0)+1));
+  cont.innerHTML = '';
+  if (!Object.keys(allTags).length) return;
+  Object.entries(allTags).sort((a,b)=>b[1]-a[1]).forEach(([t,c]) => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip-filter' + (selectedTags.has(t) ? ' selected' : '');
+    chip.textContent = '#'+t+' ('+c+')';
+    chip.addEventListener('click', () => { if(selectedTags.has(t)) selectedTags.delete(t); else selectedTags.add(t); renderReview(); });
+    cont.appendChild(chip);
+  });
+}
+
+function renderStats(entries) {
+  const grid = document.getElementById('statsGrid');
+  const scores = entries.filter(e => e.type==='emotion' && e.moodScore).map(e=>e.moodScore);
+  const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '0';
+  const high = scores.filter(s=>s>=7).length;
+  const low = scores.filter(s=>s<=3).length;
+  const archived = entries.filter(e=>e.archived).length;
+  const total = entries.length;
+  grid.innerHTML =
+    stat(total,'总记录') + stat(avg,'情绪均分') + stat(high,'好心情(≥7)') + stat(low,'低落(≤3)') + stat(archived,'已释怀');
+}
+function stat(v,l){ return '<div class="stat-card"><div class="stat-value">'+v+'</div><div class="stat-label">'+l+'</div></div>'; }
+
+function renderTrend(entries) {
+  const canvas = document.getElementById('trendChart');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const data = entries.filter(e => e.type==='emotion' && e.moodScore).slice(-30);
+  if (!data.length) {
+    ctx.fillStyle='#8a8a86'; ctx.font='14px sans-serif'; ctx.textAlign='center'; ctx.fillText('暂无情绪数据', w/2, h/2); return;
+  }
+  const padL=40, padR=20, padT=20, padB=30, cw=w-padL-padR, ch=h-padT-padB;
+  ctx.strokeStyle='#e0ddd7'; ctx.lineWidth=1; ctx.font='11px sans-serif'; ctx.fillStyle='#8a8a86'; ctx.textAlign='right';
+  for (let i=0;i<=10;i+=2){ const y=padT+ch-(i/10)*ch; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke(); ctx.fillText(i,padL-6,y+3); }
+  const step = data.length>1 ? cw/(data.length-1) : 0;
+  ctx.strokeStyle='#7a5b7a'; ctx.lineWidth=2; ctx.beginPath();
+  data.forEach((d,i)=>{ const x=padL+i*step, y=padT+ch-(d.moodScore/10)*ch; if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+  ctx.stroke();
+  data.forEach((d,i)=>{ const x=padL+i*step, y=padT+ch-(d.moodScore/10)*ch; const c=d.moodScore>=7?'#5c9c6e':d.moodScore>=4?'#d4956a':'#c45c5c'; ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle='#8a8a86'; ctx.textAlign='center';
+  const ls = Math.ceil(data.length/8);
+  data.forEach((d,i)=>{ if(i%ls===0){ ctx.fillText(d.date.slice(5), padL+i*step, h-10); } });
+}
+
+function renderTimeline(entries) {
+  const list = document.getElementById('timelineList');
+  list.innerHTML = '';
+  if (!entries.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div>这个筛选条件下还没有记录</div>'; return; }
+  entries.forEach(e => {
+    const wrap = document.createElement('div');
+    const isWork = e.type==='work';
+    const badge = isWork ? '<span class="history-badge work">工作</span>' : '<span class="history-badge emotion">情绪</span>';
+    let summary;
+    if (isWork) summary = (e.workDone||e.workHighlight||'工作记录').substring(0,40);
+    else summary = ((e.emoEmotion||e.moods?.join('、')||'情绪记录') + ' ' + (e.moodScore?('('+e.moodScore+'分)'):'')).substring(0,40);
+    const scoreColor = e.moodScore ? (e.moodScore>=7?'#5c9c6e':e.moodScore>=4?'#d4956a':'#c45c5c') : '#999';
+    const arch = e.archived ? ' <span class="history-archived">🕊</span>' : '';
+    wrap.innerHTML = '<div class="history-item type-'+e.type+'">' +
+      '<div class="history-date">'+e.date.slice(5)+'<br>'+e.time+'</div>' +
+      badge +
+      '<div class="history-mood">'+esc(summary)+arch+'</div>' +
+      (e.moodScore ? '<div class="history-score" style="background:'+scoreColor+'">'+e.moodScore+'</div>' : '<div style="width:34px;"></div>') +
+      '</div><div class="history-detail" id="d-'+e.id+'"></div>';
+    const item = wrap.querySelector('.history-item');
+    const detail = wrap.querySelector('.history-detail');
+    item.addEventListener('click', () => {
+      detail.classList.toggle('show');
+      if (detail.classList.contains('show') && !detail.dataset.loaded) {
+        detail.dataset.loaded = '1';
+        detail.innerHTML = buildDetail(e);
+      }
+    });
+    list.appendChild(wrap);
+  });
+}
+
+function buildDetail(e) {
+  let h = '';
+  if (e.type==='work') {
+    if (e.energy) h += row('能量', e.energy);
+    if (e.workDone) h += row('完成', e.workDone);
+    if (e.workTodo) h += row('待办', e.workTodo);
+    if (e.workHighlight) h += row('亮点', e.workHighlight);
+    if (e.workBlocker) h += row('困难', e.workBlocker);
+  } else {
+    if (e.moodScore) h += row('评分', e.moodScore+'/10');
+    if (e.moods?.length) h += row('情绪', e.moods.join('、'));
+    if (e.emoSituation) h += row('触发情境', e.emoSituation);
+    if (e.emoEmotion) h += row('情绪&强度', e.emoEmotion+' ('+(e.emoIntensity||'?')+'/10)');
+    if (e.emoBody) h += row('身体感受', e.emoBody);
+    if (e.emoThought) h += row('当时想法', e.emoThought);
+    if (e.emoDistortions?.length) h += row('想法小陷阱', e.emoDistortions.join('、'));
+    if (e.emoReframe) h += row('换个角度看', e.emoReframe);
+    if (e.emoAction) h += row('行动瓶', e.emoAction);
+    if (e.emoFree) h += row('自由书写', e.emoFree);
+    if (e.lifeAreas?.length) h += row('关联领域', e.lifeAreas.join('、') + (e.areaIntensity ? (' (强度'+e.areaIntensity+'/10)') : ''));
+    if (e.areaNote) h += row('具象化感受', e.areaNote);
+    if (e.improve) h += row('能否改善', e.improve);
+    if (e.selfHeal) h += row('接纳/自愈', e.selfHeal);
+    if (e.emoHiddenCost) h += row('看不见的成本', e.emoHiddenCost);
+  }
+  if (e.tags?.length) h += row('标签', e.tags.map(t=>'#'+t).join(' '));
+  if (e.followups?.length) {
+    h += '<div class="detail-label" style="margin-top:10px;">📝 追记</div>';
+    e.followups.forEach(f => {
+      h += '<div class="followup-box"><div class="fu-meta">'+f.date+' '+f.time+'</div><span class="fu-status">'+f.status+'</span>'+esc(f.content)+'</div>';
+    });
+  }
+  h += '<div class="detail-actions">' +
+    '<button onclick="editEntry('+e.id+',\''+e.type+'\')">✏ 编辑</button>' +
+    '<button onclick="openFollowup('+e.id+')">➕ 追记/释怀</button>' +
+    '<button class="danger" onclick="deleteEntry('+e.id+')">🗑 删除</button>' +
+    '</div>';
+  return h;
+}
+function row(l,v){ return '<div class="detail-row"><div class="detail-label">'+l+'</div><div class="detail-value">'+esc(v)+'</div></div>'; }
+
+// ==================== 词典 ====================
+function renderDictionary() {
+  const c = document.getElementById('dictionaryContent'); c.innerHTML = '';
+  EMOTION_DICT.forEach(cat => {
+    const div = document.createElement('div'); div.className = 'emotion-category';
+    div.innerHTML = '<h3><span class="icon">'+cat.icon+'</span> '+cat.cat+' <span class="arrow">▶</span></h3>';
+    const words = document.createElement('div'); words.className = 'emotion-words';
+    cat.words.forEach(w => {
+      const s = document.createElement('span'); s.className='emotion-word'; s.textContent=w;
+      s.addEventListener('click', () => { navigator.clipboard?.writeText(w).then(()=>showToast('已复制：'+w)).catch(()=>showToast(w)); });
+      words.appendChild(s);
+    });
+    div.appendChild(words);
+    div.querySelector('h3').addEventListener('click', () => div.classList.toggle('open'));
+    c.appendChild(div);
+  });
+  const dd = document.getElementById('distortionDictionary'); dd.innerHTML = '';
+  DISTORTIONS.forEach(d => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:10px 0; border-bottom:1px solid var(--border);';
+    div.innerHTML = '<strong style="color:var(--primary);">'+d.name+'</strong><br><span style="font-size:13px;color:var(--text-light);">'+d.desc+'</span>';
+    dd.appendChild(div);
+  });
+}
+
+// ==================== 数据管理 ====================
+function exportData() {
+  const data = loadData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '工作情绪数据_'+ymd(new Date())+'.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('已导出数据');
+}
+function exportMarkdown() {
+  const data = loadData();
+  const entries = (data.entries || []).slice().sort((a,b) => ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+  const works = entries.filter(e => e.type === 'work');
+  const emos = entries.filter(e => e.type === 'emotion');
+  const L = [];
+  L.push('# 工作情绪工作台 · 导出');
+  L.push('');
+  L.push('> 导出时间：' + new Date().toLocaleString());
+  L.push('');
+  L.push('## 概览');
+  L.push('');
+  L.push('- 工作记录：' + works.length + ' 条');
+  L.push('- 情绪记录：' + emos.length + ' 条');
+  L.push('- 合计：' + entries.length + ' 条');
+  L.push('');
+  L.push('## 工作记录');
+  L.push('');
+  if (works.length === 0) L.push('_暂无_');
+  else works.forEach(w => {
+    L.push('### ' + (w.date || '') + ' ' + (w.time || ''));
+    L.push('');
+    L.push('- 精力：' + (w.energy || '—'));
+    if (w.workDone) L.push('- 已完成：' + w.workDone);
+    if (w.workTodo) L.push('- 待办：' + w.workTodo);
+    if (w.workHighlight) L.push('- 亮点：' + w.workHighlight);
+    if (w.workBlocker) L.push('- 卡点：' + w.workBlocker);
+    if (w.tags && w.tags.length) L.push('- 标签：' + w.tags.join('、'));
+    L.push('');
+  });
+  L.push('## 情绪记录');
+  L.push('');
+  if (emos.length === 0) L.push('_暂无_');
+  else emos.forEach(e => {
+    L.push('### ' + (e.date || '') + ' ' + (e.time || ''));
+    L.push('');
+    L.push('- 情绪评分：' + (e.moodScore != null ? e.moodScore : '—') + ' / 10');
+    if (e.moods && e.moods.length) L.push('- 情绪词：' + e.moods.join('、'));
+    if (e.emoSituation) L.push('- 情境：' + e.emoSituation);
+    if (e.emoEmotion) L.push('- 情绪命名：' + e.emoEmotion);
+    if (e.emoIntensity != null) L.push('- 强度：' + e.emoIntensity + ' / 10');
+    if (e.emoBody) L.push('- 身体感受：' + e.emoBody);
+    if (e.emoThought) L.push('- 想法：' + e.emoThought);
+    if (e.emoDistortions && e.emoDistortions.length) L.push('- 认知扭曲：' + e.emoDistortions.join('、'));
+    if (e.emoReframe) L.push('- 重构：' + e.emoReframe);
+    if (e.lifeAreas && e.lifeAreas.length) L.push('- 生活领域：' + e.lifeAreas.join('、') + (e.areaIntensity != null ? ('（强度 ' + e.areaIntensity + '）') : ''));
+    if (e.emoAction) L.push('- 行动：' + e.emoAction);
+    if (e.selfHeal) L.push('- 自愈：' + e.selfHeal);
+    if (e.emoFree) L.push('- 自由书写：' + e.emoFree);
+    if (e.emoHiddenCost) L.push('- 隐性成本觉察：' + e.emoHiddenCost);
+    if (e.tags && e.tags.length) L.push('- 标签：' + e.tags.join('、'));
+    L.push('');
+  });
+  const md = L.join('\n');
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '工作情绪记录_' + ymd(new Date()) + '.md';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('已导出 Markdown');
+}
+function importData(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      const data = loadData();
+      const importedEntries = imported.entries || [];
+      const map = {};
+      data.entries.forEach(e => map[e.id] = e);
+      importedEntries.forEach(e => map[e.id] = e);
+      data.entries = Object.values(map);
+      saveData(data);
+      showToast('导入成功，共 '+data.entries.length+' 条');
+      renderReview();
+    } catch(err) { showToast('导入失败：文件格式错误'); }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+function clearAllData() {
+  if (confirm('确定清除全部数据？不可恢复。')) { localStorage.removeItem(STORAGE_KEY); showToast('已清除'); renderReview(); }
+}
+
+// ==================== 云端备份（GitHub Gist）====================
+const GIST_TOKEN_KEY = 'wb_gist_token', GIST_ID_KEY = 'wb_gist_id', GIST_AUTO_KEY = 'wb_gist_auto', GIST_FILE = 'workbuddy-backup.json';
+let _gistTimer = null;
+function getGistToken(){ return localStorage.getItem(GIST_TOKEN_KEY) || ''; }
+function getGistId(){ return localStorage.getItem(GIST_ID_KEY) || ''; }
+function setGistId(id){ localStorage.setItem(GIST_ID_KEY, id); }
+function updateGistStatus(t){ const el = document.getElementById('gistStatus'); if(el) el.textContent = t; }
+function updateGistIdText(){ const el = document.getElementById('gistIdText'); if(el) el.textContent = getGistId() || '—'; }
+function gistPayload(){
+  const data = loadData();
+  data._meta = { savedAt: new Date().toISOString(), app: 'workEmotionJournal', v: 2 };
+  return { description: '工作情绪工作台 自动备份', public: false, files: { [GIST_FILE]: { content: JSON.stringify(data) } } };
+}
+async function gistBackup(manual){
+  const token = getGistToken();
+  if(!token){ if(manual) showToast('请先填写并保存 Token'); return; }
+  const id = getGistId();
+  const headers = { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' };
+  try {
+    let url = 'https://api.github.com/gists', method = 'POST';
+    if(id){ url = 'https://api.github.com/gists/' + id; method = 'PATCH'; }
+    const res = await fetch(url, { method, headers, body: JSON.stringify(gistPayload()) });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if(json.id) setGistId(json.id);
+    updateGistIdText();
+    updateGistStatus('✅ 已备份 ' + new Date().toLocaleString());
+    if(manual) showToast('已备份到云端');
+  } catch(e){
+    updateGistStatus('⚠️ 备份失败（离线 / token 无效 / 限流）');
+    if(manual) showToast('备份失败，检查网络或 token');
+  }
+}
+function scheduleGistBackup(){
+  if(localStorage.getItem(GIST_AUTO_KEY) === 'off') return;
+  if(!getGistToken()) return;
+  clearTimeout(_gistTimer);
+  _gistTimer = setTimeout(() => gistBackup(false), 1500);
+}
+async function gistRestore(){
+  const token = getGistToken(), id = getGistId();
+  if(!token || !id){ showToast('请先配置并至少备份一次'); return; }
+  try {
+    const res = await fetch('https://api.github.com/gists/' + id, { headers: { 'Authorization': 'token ' + token } });
+    if(!res.ok) throw new Error();
+    const json = await res.json();
+    const f = json.files && json.files[GIST_FILE];
+    if(!f) throw new Error('no file');
+    const imported = JSON.parse(f.content);
+    const data = loadData();
+    const map = {};
+    data.entries.forEach(e => map[e.id] = e);
+    (imported.entries || []).forEach(e => map[e.id] = e);
+    data.entries = Object.values(map);
+    delete data._meta;
+    saveData(data);
+    renderReview();
+    showToast('已从云端恢复，共 ' + data.entries.length + ' 条');
+  } catch(e){ showToast('恢复失败，检查 token / 网络'); }
+}
+function initGistUI(){
+  const tokenInput = document.getElementById('gistToken');
+  const autoChk = document.getElementById('gistAuto');
+  if(tokenInput) tokenInput.value = getGistToken();
+  if(autoChk) autoChk.checked = (localStorage.getItem(GIST_AUTO_KEY) !== 'off');
+  updateGistIdText();
+  updateGistStatus(getGistToken() ? '已配置，保存记录将自动备份' : '未配置');
+  document.getElementById('btnGistSaveToken')?.addEventListener('click', () => {
+    const v = (tokenInput.value || '').trim();
+    if(!v){ localStorage.removeItem(GIST_TOKEN_KEY); showToast('已清除 token'); updateGistStatus('未配置'); }
+    else { localStorage.setItem(GIST_TOKEN_KEY, v); showToast('已保存 token'); updateGistStatus('已配置，保存记录将自动备份'); gistBackup(true); }
+    updateGistIdText();
+  });
+  document.getElementById('btnGistBackup')?.addEventListener('click', () => gistBackup(true));
+  document.getElementById('btnGistRestore')?.addEventListener('click', () => gistRestore());
+  document.getElementById('btnGistDisconnect')?.addEventListener('click', () => {
+    if(confirm('断开云端备份？会删除本地的 token 和 Gist 绑定（云端 Gist 文件不会自动删除，需手动去 GitHub 删）。')){
+      localStorage.removeItem(GIST_TOKEN_KEY); localStorage.removeItem(GIST_ID_KEY);
+      tokenInput.value = ''; updateGistIdText(); updateGistStatus('已断开'); showToast('已断开云端备份');
+    }
+  });
+  autoChk?.addEventListener('change', () => { localStorage.setItem(GIST_AUTO_KEY, autoChk.checked ? 'on' : 'off'); });
+  if(getGistToken()) gistBackup(false);
+}
+
+// ==================== 快速收集箱 ====================
+const INBOX_KEY = 'workEmotionInbox_v1';
+function loadInbox() { try { const r = localStorage.getItem(INBOX_KEY); const d = r ? JSON.parse(r) : []; return Array.isArray(d) ? d : []; } catch(e) { return []; } }
+function saveInbox(list) { localStorage.setItem(INBOX_KEY, JSON.stringify(list)); }
+function renderInbox() {
+  const list = loadInbox();
+  const wrap = document.getElementById('inboxList');
+  wrap.innerHTML = '';
+  if (!list.length) { wrap.innerHTML = '<div class="empty-state"><div class="emoji">🗒️</div>收集箱还是空的，先把脑子里的待办倒出来吧。</div>'; return; }
+  list.forEach(it => {
+    const div = document.createElement('div'); div.className = 'inbox-item';
+    div.innerHTML = '<div style="flex:1;"><div class="inbox-text">'+esc(it.text)+'</div><div class="inbox-meta">'+it.date+' '+it.time+'</div></div><button class="inbox-del" onclick="deleteInbox('+it.id+')">🗑</button>';
+    wrap.appendChild(div);
+  });
+}
+function addInbox() {
+  const v = document.getElementById('inboxInput').value.trim();
+  if (!v) { showToast('写点什么再放进来'); return; }
+  const n = new Date();
+  const list = loadInbox();
+  list.unshift({ id: Date.now(), text: v, date: ymd(n), time: hm(n) });
+  saveInbox(list); renderInbox();
+  document.getElementById('inboxInput').value = '';
+  showToast('📥 已放入收集箱');
+}
+function deleteInbox(id) {
+  if (!confirm('从收集箱移除这条？')) return;
+  saveInbox(loadInbox().filter(x => x.id !== id)); renderInbox();
+}
+
+// ==================== 复盘：主要矛盾洞察 ====================
+function renderInsight(entries) {
+  const el = document.getElementById('insightCard');
+  if (!entries.length) { el.innerHTML = '<div class="empty-state" style="padding:12px 0;">该范围暂无记录。</div>'; return; }
+  const tagStats = {};
+  entries.forEach(e => {
+    (e.tags || []).forEach(t => {
+      if (!tagStats[t]) tagStats[t] = { freq: 0, iSum: 0, iCnt: 0 };
+      tagStats[t].freq++;
+      if (e.type === 'emotion' && e.emoIntensity) { tagStats[t].iSum += e.emoIntensity; tagStats[t].iCnt++; }
+    });
+  });
+  const arr = Object.entries(tagStats).map(([t, s]) => {
+    const avgI = s.iCnt ? (s.iSum / s.iCnt) : null;
+    const score = s.freq * (1 + (avgI !== null ? avgI / 10 : 0));
+    return { t, freq: s.freq, avgI, score };
+  }).sort((a, b) => b.score - a.score).slice(0, 5);
+  if (!arr.length) { el.innerHTML = '<div class="empty-state" style="padding:12px 0;">给记录打上标签后，这里会聚合出主要矛盾。</div>'; return; }
+  let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+  arr.forEach((x, i) => {
+    const barW = Math.min(100, Math.round(x.score / (arr[0].score || 1) * 100));
+    html += '<div style="display:flex; align-items:center; gap:10px;">' +
+      '<div style="min-width:96px; font-weight:600; color:var(--primary);">#' + (i + 1) + ' ' + esc(x.t) + '</div>' +
+      '<div style="flex:1; height:10px; background:var(--tag-bg); border-radius:6px; overflow:hidden;"><div style="width:' + barW + '%; height:100%; background:var(--accent);"></div></div>' +
+      '<div style="min-width:128px; text-align:right; font-size:12px; color:var(--text-light);">出现 ' + x.freq + ' 次' + (x.avgI !== null ? ' · 均强 ' + x.avgI + '/10' : '') + '</div>' +
+      '</div>';
+  });
+  html += '</div><div class="tip-box" style="margin-top:10px;">💡 排在前面的，就是「出现最频繁 + 伴随最强情绪」的主要矛盾，优先在复盘里看看能从哪松一点。</div>';
+  el.innerHTML = html;
+}
+
+// ==================== 复盘：看不见的成本 ====================
+function renderHiddenCost(entries) {
+  const el = document.getElementById('hiddenCostCard');
+  const emos = entries.filter(e => e.type === 'emotion' && e.emoHiddenCost && e.emoHiddenCost.trim());
+  if (!emos.length) { el.innerHTML = '<div class="empty-state" style="padding:12px 0;">还没记录过「看不见的成本」。下次情绪记录时，留意一下那些悄悄消耗你的东西——时间、精力、情绪、关系、机会。</div>'; return; }
+  const types = ['时间','精力','情绪','关系','机会'];
+  const cnt = {};
+  emos.forEach(e => { types.forEach(t => { if (e.emoHiddenCost.indexOf(t) >= 0) cnt[t] = (cnt[t]||0)+1; }); });
+  const arr = Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+  let html = '';
+  if (arr.length) {
+    html += '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">';
+    arr.forEach(([t,c]) => { html += '<span style="display:inline-block; padding:2px 10px; border-radius:10px; background:var(--tag-bg); color:var(--text); font-size:13px;">'+esc(t)+' ×'+c+'</span>'; });
+    html += '</div>';
+  }
+  html += '<div style="display:flex; flex-direction:column; gap:8px;">';
+  emos.slice(-4).reverse().forEach(e => {
+    html += '<div style="border-left:3px solid var(--accent); padding:4px 10px; background:var(--tag-bg); border-radius:6px;">' +
+      '<div style="font-size:12px; color:var(--text-light);">'+(e.date||'')+' '+(e.time||'')+(e.emoEmotion?(' · '+esc(e.emoEmotion)):'')+'</div>' +
+      '<div style="font-size:14px;">'+esc(e.emoHiddenCost)+'</div></div>';
+  });
+  html += '</div><div class="tip-box" style="margin-top:10px;">💡 反复出现的成本类型，就是该被看见、想办法松绑的地方——省小钱不如省精力。</div>';
+  el.innerHTML = html;
+}
+
+// ==================== 初始化 ====================
+renderDictionary();
+initGistUI();
+</script>
+<script>
+/* ===== 日常梳理板逻辑（IIFE 隔离，独立 localStorage 键 moodboard.v1） ===== */
+(function(){
+  "use strict";
+var FEELS = ["发紧","发空","发沉","发堵","发麻","烦躁","无力"];
+var KEY = "moodboard.v1";
+var state = {recs:[],prs:[]};
+
+function load(){
+  try{var r=localStorage.getItem(KEY); if(r){var p=JSON.parse(r);
+    state.recs=p.recs||[]; state.prs=p.prs||[];}}catch(e){}
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+
+function slotOf(d){
+  var h = d.getHours();
+  if(h<6) return "深夜";
+  if(h<9) return "早晨";
+  if(h<12) return "上午";
+  if(h<14) return "午间";
+  if(h<18) return "下午";
+  if(h<23) return "晚上";
+  return "深夜";
+}
+function pad(n){return n<10?"0"+n:""+n}
+function nowStr(){var d=new Date();
+  return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());}
+function fmt(iso){
+  var d=new Date(iso); if(isNaN(d)) return iso;
+  var w=["日","一","二","三","四","五","六"][d.getDay()];
+  return (d.getMonth()+1)+"月"+d.getDate()+"日 周"+w+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+}
+
+var pickedFeel="", pickedLv=3;
+function buildChips(){
+  var f=document.getElementById("feel"); f.innerHTML="";
+  FEELS.forEach(function(x){
+    var b=document.createElement("button");
+    b.className="chip"+(pickedFeel===x?" on":""); b.textContent=x; b.type="button";
+    b.onclick=function(){pickedFeel=(pickedFeel===x?"":x);buildChips();};
+    f.appendChild(b);
+  });
+  var l=document.getElementById("lv"); l.innerHTML="";
+  [1,2,3,4,5].forEach(function(n){
+    var b=document.createElement("button");
+    b.className="chip lv"+(pickedLv===n?" on":""); b.textContent=n; b.type="button";
+    b.onclick=function(){pickedLv=n;buildChips();};
+    l.appendChild(b);
+  });
+}
+
+function render(){
+  var dl=document.getElementById("sceneList"); dl.innerHTML="";
+  var seen={};
+  state.recs.forEach(function(r){ if(r.scene && !seen[r.scene]){seen[r.scene]=1;
+    var o=document.createElement("option"); o.value=r.scene; dl.appendChild(o);} });
+
+  document.getElementById("recList").innerHTML="";
+  if(!state.recs.length){
+    document.getElementById("recList").innerHTML='<div class="empty">还没有记录。</div>';
+  }else{
+    state.recs.slice().reverse().forEach(function(r){
+      var d=document.createElement("div"); d.className="rec";
+      var left=document.createElement("div"); left.className="t"; left.textContent=fmt(r.when);
+      var body=document.createElement("div"); body.className="b";
+      var line1=r.scene||"（没写）";
+      if(r.feel) line1+="　·　"+r.feel;
+      if(r.lv) line1+="　"+r.lv+"/5";
+      var s=document.createElement("div"); s.className="sc"; s.textContent=line1; body.appendChild(s);
+      var bits=[];
+      if(r.who) bits.push("和"+r.who);
+      if(r.slot) bits.push(r.slot);
+      if(r.expect) bits.push("期待："+r.expect);
+      if(bits.length){var m=document.createElement("div");m.className="mt";m.textContent=bits.join("　");body.appendChild(m);}
+      var del=document.createElement("button"); del.className="del"; del.type="button"; del.textContent="删除";
+      del.onclick=function(){ state.recs=state.recs.filter(function(x){return x.id!==r.id;}); save(); render(); };
+      d.appendChild(left); d.appendChild(body); d.appendChild(del);
+      document.getElementById("recList").appendChild(d);
+    });
+  }
+
+  var v=document.getElementById("verdict");
+  var n=state.recs.length;
+  if(n<8){
+    v.className="verdict v-none";
+    v.textContent="已记 "+n+" 条，还差 "+(8-n)+" 条才够看分布。这两周别分析，只管记。";
+  }else{
+    var topSlot=topRatio(function(r){return r.slot;});
+    var topScene=topRatio(function(r){return r.scene;});
+    if(topScene.r>=0.5 || topSlot.r>=0.5){
+      v.className="verdict v-out";
+      v.textContent="集中型：你的闷稳定地长在「"+topScene.k+"／"+topSlot.k+"」上。这更像一个外部参数在持续输出，"
+        +"先别往心里挖——挑一个最小的外部变量改掉试试。原则库里该写的是「关于环境」的规则。";
+    }else{
+      v.className="verdict v-in";
+      v.textContent="弥散型：事情换了好几轮，感觉却一模一样（"+topFeelName()+"居多）。这更像内在信号，"
+        +"别急着把它压成一句原则——先允许它存在。原则库里该写的是「关于自己」的规则。";
+    }
+  }
+
+  draw("bySlot",countBy(function(r){return r.slot;}),"fl-b");
+  draw("byScene",countBy(function(r){return r.scene||"（空）";}),"fl-c");
+  draw("byFeel",countBy(function(r){return r.feel||"（空）";}),"fl-a");
+
+  var pl=document.getElementById("prList"); pl.innerHTML="";
+  if(!state.prs.length){ pl.innerHTML='<div class="empty">还没提炼过原则。</div>'; }
+  else{
+    state.prs.slice().reverse().forEach(function(p){
+      var d=document.createElement("div"); d.className="pr";
+      var x=document.createElement("button"); x.className="x"; x.type="button"; x.textContent="删除";
+      x.onclick=function(){ state.prs=state.prs.filter(function(y){return y.id!==p.id;}); save(); render(); };
+      d.appendChild(x);
+      var m=document.createElement("div");
+      m.textContent="当「"+p.w+"」发生时，我做「"+p.d+"」。";
+      d.appendChild(m);
+      if(p.y){var z=document.createElement("div");z.className="z";z.textContent="因为"+p.y;d.appendChild(z);}
+      pl.appendChild(d);
+    });
+  }
+}
+function topFeelName(){
+  var c=countBy(function(r){return r.feel||"（空）";});
+  if(!c.length) return "—";
+  return c[0][0];
+}
+function countBy(fn){
+  var m={};
+  state.recs.forEach(function(r){var k=fn(r); if(k) m[k]=(m[k]||0)+1;});
+  return Object.keys(m).map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+}
+function topRatio(fn){
+  var c=countBy(fn);
+  if(!c.length) return {k:"—",r:0};
+  return {k:c[0][0], r:c[0][1]/state.recs.length};
+}
+function draw(id,data,cls){
+  var el=document.getElementById(id); el.innerHTML="";
+  if(!data.length){ el.innerHTML='<div class="empty">暂无数据</div>'; return; }
+  var max=data[0][1];
+  data.forEach(function(pair){
+    var b=document.createElement("div"); b.className="bar";
+    var lb=document.createElement("div"); lb.className="lb";
+    var l=document.createElement("span"); l.textContent=pair[0];
+    var r=document.createElement("span"); r.textContent=pair[1]+" 次";
+    lb.appendChild(l); lb.appendChild(r);
+    var tr=document.createElement("div"); tr.className="tr";
+    var fl=document.createElement("div"); fl.className="fl "+cls;
+    fl.style.width=Math.max(4,Math.round(pair[1]/max*100))+"%";
+    tr.appendChild(fl); b.appendChild(lb); b.appendChild(tr); el.appendChild(b);
+  });
+}
+
+document.getElementById("save").onclick=function(){
+  var w=document.getElementById("when").value;
+  var scene=document.getElementById("scene").value.trim();
+  var other=document.getElementById("feelOther").value.trim();
+  var feel=pickedFeel||other;
+  if(!w){ hint("先选个时间"); return; }
+  if(!scene && !feel){ hint("至少写「在做什么」或选一个身体感觉"); return; }
+  var d=new Date(w);
+  state.recs.push({
+    id:Date.now(), when:w, slot:slotOf(d), scene:scene,
+    who:document.getElementById("who").value.trim(),
+    feel:feel, lv:pickedLv, expect:document.getElementById("expect").value.trim()
+  });
+  save();
+  document.getElementById("scene").value="";
+  document.getElementById("who").value="";
+  document.getElementById("expect").value="";
+  document.getElementById("feelOther").value="";
+  pickedFeel=""; buildChips(); render();
+  hint("记下了，共 "+state.recs.length+" 条");
+};
+function hint(t){document.getElementById("saveHint").textContent=t;}
+
+document.getElementById("addPr").onclick=function(){
+  var w=document.getElementById("pWhen").value.trim();
+  var d=document.getElementById("pDo").value.trim();
+  var y=document.getElementById("pWhy").value.trim();
+  if(!w||!d){ return; }
+  state.prs.push({id:Date.now(),w:w,d:d,y:y}); save();
+  document.getElementById("pWhen").value="";
+  document.getElementById("pDo").value="";
+  document.getElementById("pWhy").value="";
+  render();
+};
+
+document.getElementById("exp").onclick=function(){
+  var L=["# 日常梳理导出","","导出时间："+new Date().toLocaleString("zh-CN"),"","## 记录",""];
+  state.recs.slice().reverse().forEach(function(r){
+    L.push("- "+fmt(r.when)+"　"+r.slot+"　【"+(r.scene||"—")+"】"
+      +(r.feel?"　感觉："+r.feel:"")+"　"+r.lv+"/5"
+      +(r.who?"　和"+r.who:"")
+      +(r.expect?"　期待："+r.expect:""));
+  });
+  L.push("","## 原则","");
+  if(!state.prs.length) L.push("（暂无）");
+  state.prs.forEach(function(p){
+    L.push("- 当「"+p.w+"」发生时，我做「"+p.d+"」。"+(p.y?" 因为"+p.y:""));
+  });
+  var blob=new Blob([L.join("\n")],{type:"text/markdown;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="日常梳理-"+new Date().toISOString().slice(0,10)+".md";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("clr").onclick=function(){
+  if(confirm("清空全部记录和原则？这个操作没法撤销。建议先导出一份。")){
+    state.recs=[]; state.prs=[]; save(); render();
+  }
+};
+
+load();
+document.getElementById("when").value=nowStr();
+buildChips();
+render();
+})();
+</script>
+</body>
+</html>
